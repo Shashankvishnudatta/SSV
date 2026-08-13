@@ -2,3 +2,7 @@
 .env
 backend/.env
 supabase/.env
+
+.env
+backend/.env
+supabase/.env
