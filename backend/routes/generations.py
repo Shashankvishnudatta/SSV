@@ -10,8 +10,13 @@ router = APIRouter()
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", os.getenv("SUPABASE_ANON_KEY", ""))
 
+
+def is_supabase_configured() -> bool:
+    return bool(SUPABASE_URL and SUPABASE_KEY)
+
+
 def get_supabase() -> Client:
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    if not is_supabase_configured():
         raise HTTPException(status_code=500, detail="Supabase environment variables missing")
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -44,6 +49,8 @@ async def list_generations(
     user_id: str = Depends(get_current_user_id),
     supabase: Client = Depends(get_supabase)
 ):
+    if not is_supabase_configured():
+        return []
     try:
         response = supabase.table("generations") \
             .select("id, prompt, created_at") \
@@ -61,6 +68,8 @@ async def get_generation(
     user_id: str = Depends(get_current_user_id),
     supabase: Client = Depends(get_supabase)
 ):
+    if not is_supabase_configured():
+        raise HTTPException(status_code=503, detail="Supabase is not configured for history lookup")
     try:
         response = supabase.table("generations") \
             .select("*") \
@@ -76,6 +85,8 @@ async def get_generation(
 
 # Helper function for Person A's /generate endpoint
 def save_generation_to_db(user_id: str, prompt: str, html: str, generation_id: Optional[str] = None) -> dict:
+    if not is_supabase_configured():
+        return {}
     supabase = get_supabase()
     data = {
         "user_id": user_id,

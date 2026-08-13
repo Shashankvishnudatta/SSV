@@ -35,4 +35,9 @@ app.include_router(generations_router)
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "ok", "service": "SSV Generation Engine"}
+    from routes.generations import is_supabase_configured
+    return {
+        "status": "ok",
+        "service": "SSV Generation Engine",
+        "supabase_configured": is_supabase_configured(),
+    }
